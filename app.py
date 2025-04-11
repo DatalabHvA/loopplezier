@@ -74,17 +74,20 @@ def create_map(_gdf, _nodes, _df_route = None, route = False, distance = 0, scor
 			name='Route').add_to(m)	
 		st.markdown('**Er is een route gevonden van '+str(round(distance/1000,2))+'km en een gemiddelde score van '+str(round(score,2))
 			  		+ '**' )
+		if score == -10: ###
+			st.markdown("Niet mogelijk om alle waypoints te bezoeken") ###
+    
 
 	return m
 
-def calculate_route(gdf, start, end, g_min, g_max):
+def calculate_route(gdf, start, end, g_min, g_max, waypoints):
     a = gdf.sort_values(['u','v']).pivot(index = 'u', columns = 'v', values = 'length').fillna(100000).values # lengte van de edges
     s = gdf.sort_values(['u','v']).pivot(index = 'u', columns = 'v', values = 'Score').fillna(0).values # score afhankelijke van selectie
     s=s*a
     
     a_final,s_final,start_final,end_final,indices = smallMatrices(a,s,g_max,start,end)
     
-    best_solution_temp, distance, score, runtime = looproutes_ant_colony_optimization(a_final,s_final,start_final,end_final,g_min,g_max)
+    best_solution_temp, distance, score, runtime = looproutes_ant_colony_optimization(a_final,s_final,start_final,end_final,waypoints,g_min,g_max)
     
     best_solution = indices[best_solution_temp]
     
@@ -126,7 +129,7 @@ def main():
 		#wegdekkwaliteit = st.number_input("Score wegdekkwaliteit", -10,10,0,1, key="wegdekkwaliteit")
 		horeca = st.number_input("Score horeca", -10,10,0,1, key="horeca")
 		#kerk = st.number_input("Score kerken", -10,10,0,1, key="kerk")
-		winkels = st.number_input("Score winkels", -10,10,0,1, key="winkels")
+		winkels = st.number_input("Sco3re winkels", -10,10,0,1, key="winkels")
 		#ov = st.number_input("Score OV", -10,10,0,1, key="ov")
 		calculate_button = st.form_submit_button("Calculate")
 	
@@ -135,6 +138,9 @@ def main():
 		end = st.number_input("Eind knooppunt", 0,3100,3045,1,  key="end")
 		min_dist = st.number_input("Minimale afstand", 500,10000,500,100,  key="min_dist")
 		max_dist = st.number_input("Maximale afstand", 500,10000,3000,100,  key="max_dist")
+		waypoints_text = st.text_input("Voeg waypoints toe (gescheiden met komma)",value = '')
+		waypoints = eval(f"[{waypoints_text}]")
+
 		add_route = st.form_submit_button("Add route")
 			
 	if calculate_button:
@@ -144,7 +150,7 @@ def main():
 		gdf = calculate_new_column(gdf, ovl = ovl, bomen = bomen, water = water, monumenten = monumenten, wegen = wegen, parken = parken, toiletten = 0, verkeerslichten = verkeerslichten, wegdekkwaliteit = 0, horeca = horeca, kerk = 0, winkels = winkels ,ov = 0)
 		i = 0
 		# Ook bij negatieve scores een route vinden door scores te verhogen.
-		df_route, distance, score = calculate_route(gdf, start, end, min_dist, max_dist)
+		df_route, distance, score = calculate_route(gdf, start, end, min_dist, max_dist, waypoints)
 		route = True
 
 	folium_static(create_map(gdf, nodes, df_route, route, distance, score), width=1000, height=700)

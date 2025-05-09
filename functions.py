@@ -52,20 +52,18 @@ import joblib
 
 
 
-def distanceScoreRoute(a,s, solution, waypoints=[]): ###
-    # Bereken de afstand en score gegeven een route
+def distanceScoreRoute(a,s,solution):
+    # Bereken de adstand en score gegeven een route
+    
     distance = 0
     score = 0 
     for i in range(len(solution)-1):
         distance += a[solution[i], solution[i+1]]
         score += s[solution[i], solution[i+1]]
+        
     if distance >0:
         score /= distance
-    for w in waypoints:###
-        if w not in solution:###
-            score = -10###
-            break###
- 
+
     return distance, score
 
 def SelectMove(a,s_norm,i_c,j_e,g_c,g_min,g_max,tabu,tau, alpha, beta, dist_matrix):
@@ -187,7 +185,7 @@ def SelectMove(a,s_norm,i_c,j_e,g_c,g_min,g_max,tabu,tau, alpha, beta, dist_matr
     
 #     return opt_route, opt_distance, opt_value, runtime
 
-def looproutes_ant_colony_optimization(a,s,i_s,j_e,waypoints,g_min,g_max,n_ants = 100,n_iter = 100,alpha = 0.5,beta =0.5,rho = 0.5,Q3 = 1,paths = []):
+def looproutes_ant_colony_optimization(a,s,i_s,j_e,g_min,g_max,n_ants = 100,n_iter = 100,alpha = 0.5,beta =0.5,rho = 0.5,Q3 = 1,paths = []):
     # ant colony optimization om looproutes te bepalen
     n = a.shape[0]
 
@@ -211,7 +209,7 @@ def looproutes_ant_colony_optimization(a,s,i_s,j_e,waypoints,g_min,g_max,n_ants 
     tau = np.ones((n,n))
     
     for i in range(len(paths)):
-        distance,score = distanceScoreRoute(a,s,paths[i],waypoints)
+        distance,score = distanceScoreRoute(a,s,paths[i])
         if score > opt_value: 
             opt_route = paths[i]
             opt_value = score
@@ -257,11 +255,6 @@ def looproutes_ant_colony_optimization(a,s,i_s,j_e,waypoints,g_min,g_max,n_ants 
                         #print(value_ant)
                         list_ants.remove(k)
                         end += 1
-
-                        for w in waypoints:###
-                            if w not in tabu[k]:###
-                                value_ant[k] = -10###
-                                break###
         
         # update tau  
         if min(value_ant)<0:
@@ -278,12 +271,9 @@ def looproutes_ant_colony_optimization(a,s,i_s,j_e,waypoints,g_min,g_max,n_ants 
             opt_value = max(value_ant)
             opt_distance = current_length[np.argmax(value_ant)]
             
-    _,opt_value = distanceScoreRoute(a,s,opt_route,waypoints)
+    _,opt_value = distanceScoreRoute(a,s,opt_route)
 
     runtime = time.time()-start_time
-    
-    if opt_value == -10: ###
-        print("Niet mogelijk om alle waypoints te bezoeken") ###
     
     return opt_route, opt_distance, opt_value, runtime
 

@@ -1,8 +1,8 @@
+streamlit-folium==0.25.3
+folium==0.19.7
 matplotlib
 geopandas
 pulp
 scipy
 networkx
 joblib
-streamlit-folium==0.25.3
-folium==0.19.7
